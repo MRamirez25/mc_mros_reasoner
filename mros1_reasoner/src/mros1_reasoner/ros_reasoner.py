@@ -10,6 +10,8 @@ from metacontrol_msgs.msg import GraphManipulationActionGoal
 from metacontrol_msgs.msg import GraphManipulationMessage
 from metacontrol_msgs.msg import SystemState
 
+from metacontrol_msgs.srv import QAPredictions # Needed for Jasper's additions
+
 from mros1_reasoner.reasoner import Reasoner
 from mros1_reasoner.tomasys import obtainBestFunctionDesign
 from mros1_reasoner.tomasys import print_ontology_status, evaluateObjectives
@@ -164,15 +166,15 @@ class RosReasoner(object):
                                                                  "*f_navigate")
 
             # Get ontology and tomasys file paths from parameters
-            nfr_energy_value = float(self.check_and_read_parameter('~nfr_energy', 0.5))  # noqa
+            # nfr_energy_value = float(self.check_and_read_parameter('~nfr_energy', 0.5))  # noqa
             nfr_safety_value = float(self.check_and_read_parameter('~nfr_safety', 0.8))  # noqa
 
             # Load NFR(s) in the KB
-            nfr_energy = self.reasoner.get_new_tomasys_nrf("nfr_energy", "*energy", nfr_energy_value)  # noqa
+            # nfr_energy = self.reasoner.get_new_tomasys_nrf("nfr_energy", "*energy", nfr_energy_value)  # noqa
             nfr_safety = self.reasoner.get_new_tomasys_nrf("nfr_safety", "*safety", nfr_safety_value)  # noqa
 
             # Link NFR(s) to objective
-            o_navigate.hasNFR.append(nfr_energy)
+            # o_navigate.hasNFR.append(nfr_energy)
             o_navigate.hasNFR.append(nfr_safety)
 
         elif len(objectives) == 1:
@@ -329,6 +331,17 @@ class RosReasoner(object):
                 rospy.logwarn("Objective {0} in status {1}"
                               .format(obj_in_error.name, obj_in_error.o_status)
                               )
+
+        rospy.loginfo('  >> Request for QA updates **')
+        try:
+            req_qa_updates = rospy.ServiceProxy('/qa_pred_update', QAPredictions)
+            # rospy.wait_for_service('/qa_pred_update')
+            resp = req_qa_updates("")
+            self.reasoner.updateQA_pred(resp.values)
+            rospy.loginfo("QA update request send")
+        except Exception as exc:
+            print(exc)
+            rospy.loginfo('/qa_pred_update service not available')
 
         # ADAPT MAPE -Plan & Execute
         rospy.loginfo('\t>> Started MAPE-K ** PLAN adaptation **')

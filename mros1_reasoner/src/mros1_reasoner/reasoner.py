@@ -15,7 +15,7 @@ import sys
 from threading import Lock
 
 from mros1_reasoner.tomasys import remove_objective_grounding, ground_fd
-from mros1_reasoner.tomasys import updateQAvalue
+from mros1_reasoner.tomasys import updateQAvalue, updateQAestimation
 from mros1_reasoner.tomasys import resetFDRealisability, resetObjStatus
 
 from owlready2 import sync_reasoner_pellet, destroy_entity
@@ -166,6 +166,24 @@ class Reasoner(object):
                 updateQAvalue(fg, qa_type, value, self.tomasys, self.onto)
             return_value = 1
 
+        return return_value
+
+    # Adding Jasper's function to update QA estimations
+    def updateQA_pred(self, values):
+        # Find the FG with the same name that the one in the QA message (in diagnostic_status.name)
+        return_value = 0
+        for i in range(len(values)):
+            print("Prediction received for %s, safety=%s" % (values[i].key, values[i].value))
+            fd = next((fd for fd in self.tomasys.FunctionDesign.instances() if fd.name == values[i].key), None)
+            qa_type = self.onto.search_one(iri="*{}".format('safety'))
+            if qa_type != None:
+                value = float(values[i].value)
+                with self.ontology_lock:
+                    updateQAestimation(fd, qa_type, value)
+                return_value = 1
+            else:
+                return_value = 0
+                return return_value
         return return_value
 
     # EXEC REASONING to update ontology with inferences

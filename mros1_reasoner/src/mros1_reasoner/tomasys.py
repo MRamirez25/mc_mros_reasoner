@@ -100,6 +100,16 @@ def updateQAvalue(fg, qa_type, value, tbox, abox):
                            namespace=abox, hasValue=value)
         fg.hasQAvalue.append(qav)
 
+# Adding Jasper's funciton to update QA estimations
+def updateQAestimation(fd, qa_type, value):
+    qas = fd.hasQAestimation
+    if qas == []: # for the first qa value received
+        print("No QAestimation found")
+    else:
+        for qa in qas:
+            if qa.isQAtype == qa_type:
+                qa.hasValue = value
+                print("Estimation updated succesfull!")
 
 # Evaluates the Objective individuals in the KB
 # returns a list with those in error
