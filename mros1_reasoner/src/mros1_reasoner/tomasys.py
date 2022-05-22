@@ -107,7 +107,8 @@ def updateQAestimation(fd, qa_type, value):
         print("No QAestimation found")
     else:
         for qa in qas:
-            if qa.isQAtype == qa_type:
+            # converting to str and splitting because different ontology naming can cause errors otherwise
+            if str(qa.isQAtype).split('.')[-1] == str(qa_type).split('.')[-1]:
                 qa.hasValue = value
                 print("Estimation updated succesfull!")
 
@@ -133,7 +134,7 @@ def obtainBestFunctionDesign(o, tbox):
     # get fds for Function F
     fds = []
     for fd in list(tbox.FunctionDesign.instances()):
-        if fd.solvesF == f:
+        if str(fd.solvesF).split('.')[1] == str(f).split('.')[1]:
             fds.append(fd)
     loginfo("== FunctionDesigns AVAILABLE: %s",
             str([fd.name for fd in fds]))
@@ -211,7 +212,7 @@ def meetNFRs(objective, fds):
 
     for fd in fds:
         for nfr in objective.hasNFR:
-            qas = [qa for qa in fd.hasQAestimation if qa.isQAtype is nfr.isQAtype]  # noqa
+            qas = [qa for qa in fd.hasQAestimation if str(qa.isQAtype).split('.')[-1] == str(nfr.isQAtype).split('.')[-1]]  # noqa
         if len(qas) != 1:
             loginfo("FD has no expected value for this QA "
                     + "or multiple definitions (inconsistent)")
